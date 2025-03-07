@@ -10,6 +10,7 @@ import { wallets } from "$lib/stores/wallets.svelte"
 import Wallet from "$lib/components/ui/Wallet/index.svelte"
 import SettingsModal from "$lib/components/SettingsModal.svelte"
 import { uiStore } from "$lib/stores/ui.svelte"
+import {channelsQuery} from "$lib/queries/channels.svelte.ts";
 
 let { children } = $props()
 
@@ -23,8 +24,13 @@ BigInt["prototype"].toJSON = function () {
 }
 
 onMount(() => {
-  const fiber = Effect.runFork(chainsQuery(ENV()))
-  return () => Effect.runPromise(Fiber.interrupt(fiber))
+  const chainsFiber = Effect.runFork(chainsQuery(ENV()))
+  const channelsFiber = Effect.runFork(channelsQuery())
+
+  return () => {
+    Effect.runPromise(Fiber.interrupt(chainsFiber))
+    Effect.runPromise(Fiber.interrupt(channelsFiber))
+  }
 })
 
 $effect(() => {
